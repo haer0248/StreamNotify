@@ -90,9 +90,9 @@ npm install discord.js tesjs tmi.js express mariadb node-fetch@2
 
 `/notfiy edit` 編輯實況通知
 - send (true/false): 是否要發送聊天室通知
-- message: 聊天室發送通知的格式
-{account} 覆蓋為使用者帳號
-{username} 覆蓋為使用者名稱
+- message: 聊天室發送通知的格式  
+{account} 覆蓋為使用者帳號  
+{username} 覆蓋為使用者名稱  
 {url} 覆蓋為 Twitch 網址
 
 Preview: `/notify check` 
