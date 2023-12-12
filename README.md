@@ -83,10 +83,10 @@ npm install discord.js tesjs tmi.js express mariadb node-fetch@2
 | 指令 | 說明 |
 |-----|------|
 | /notfiy list | 顯示已經登錄的實況通知 (若超出字元數量限制請依情況自行調整) |
-| /notfiy create <account:string> | 新增實況通知 |
-| /notfiy edit <account:string> <send:true/false> [message:string] | 編輯實況通知 |
-| /notfiy remove <account:string> | 移除實況通知 |
-| /notify check <account:string> | 查看實況通知設定 |
+| /notfiy create \<account:string\> | 新增實況通知 |
+| /notfiy edit \<account:string\> \<send:true/false\> [message:string] | 編輯實況通知 |
+| /notfiy remove \<account:string\> | 移除實況通知 |
+| /notify check \<account:string\> | 查看實況通知設定 |
 
 `/notfiy edit` 編輯實況通知
 - send (true/false): 是否要發送聊天室通知
