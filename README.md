@@ -72,3 +72,28 @@ npm install discord.js tesjs tmi.js express mariadb node-fetch@2
 變更為您自己的 Twitch 聊天室或是要發送的聊天室
 
 6. 部屬完畢後，使用 `npm start` 啟動機器人
+
+# Discord Bot
+將機器人加入到剛剛指定的群組 (上方 config.json 群組 ID)
+`https://discord.com/api/oauth2/authorize?client_id=<CLIENT-ID>&permissions=116736&scope=bot+applications.commands`
+
+斜線指令
+<> 表示必填 | [] 表示選填
+
+| 指令 | 說明 |
+|-----|------|
+| /notfiy list | 顯示已經登錄的實況通知 (若超出字元數量限制請依情況自行調整) |
+| /notfiy create <account:string> | 新增實況通知 |
+| /notfiy edit <account:string> <send:true/false> [message:string] | 編輯實況通知 |
+| /notfiy remove <account:string> | 移除實況通知 |
+| /notify check <account:string> | 查看實況通知設定 |
+
+`/notfiy edit` 編輯實況通知
+- send (true/false): 是否要發送聊天室通知
+- message: 聊天室發送通知的格式
+{account} 覆蓋為使用者帳號
+{username} 覆蓋為使用者名稱
+{url} 覆蓋為 Twitch 網址
+
+Preview: `/notify check` 
+![https://image.haer0248.me/xDmvE3.png](https://image.haer0248.me/xDmvE3.png)
