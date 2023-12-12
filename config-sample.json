@@ -1,0 +1,24 @@
+{
+  "port": 8080,
+  "twitch": {
+    "baseURL": "",
+    "client_id": "",
+    "client_secret": "",
+    "webhook_secret": "",
+    "token": "",
+    "username": "",
+    "password": ""
+  },
+  "discord": {
+    "token": "",
+    "client_id": "",
+    "client_secret": "",
+    "guild": ""
+  },
+  "database": {
+    "host": "localhost",
+    "user": "",
+    "password": "",
+    "table": ""
+  }
+}
