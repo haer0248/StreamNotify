@@ -95,5 +95,5 @@ npm install discord.js tesjs tmi.js express mariadb node-fetch@2
 {username} 覆蓋為使用者名稱  
 {url} 覆蓋為 Twitch 網址
 
-Preview: `/notify check` 
+Preview: `/notify check`  
 ![https://image.haer0248.me/xDmvE3.png](https://image.haer0248.me/xDmvE3.png)
