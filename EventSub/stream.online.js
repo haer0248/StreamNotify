@@ -3,6 +3,7 @@ const
     Logger = require('../Modules/Logger');
 
 const event = path.parse(__filename).name;
+const streamCooldown = new Set();
 
 module.exports = {
     name: event,
@@ -23,26 +24,34 @@ module.exports = {
             console.log(error.stack);
             Logger.run('Notify', `Update database failed: ${error}).`);
         } finally {
+            // conn.release();
             conn.end();
         }
 
         try {
             if (result?.send) {
-                if (event.type == "live") {
-                    template = (result?.message ?? `MrDestructoid 開台偵測器偵測到{username}開台了！傳送門 → {url}`); // 如果沒有自定訊息就跑預設訊息
-                    Logger.run('Notify', `---> Sent notify \`${username}\`(\`${userid}\`) successfully.`);
-                    let message = template;
-                        message = message.replaceAll('{username}', username); // 覆蓋為使用者名稱
-                        message = message.replaceAll('{account}', userlogin); // 覆蓋為登入帳號
-                        message = message.replaceAll('{url}', `https://twitch.tv/${userlogin}`); // 覆蓋為圖奇網址
-
-                    tmi.action('#<YOUR-CHANNEL>', message); // 變更 <YOUR-CHANNEL> 為您要發送的頻道
-                    return;
+                if (!streamCooldown.has(userid)) {
+                    if (event.type == "live") {
+                        template = (result?.message ?? `MrDestructoid 開台偵測器偵測到{username}開台了！傳送門 → {url}`);
+                        Logger.run('Notify', `---> Sent notify \`${username}\`(\`${userid}\`) successfully.`);
+                        let message = template;
+                        message = message.replaceAll('{username}', username);
+                        message = message.replaceAll('{account}', userlogin);
+                        message = message.replaceAll('{url}', `https://twitch.tv/${userlogin}`);
+                        tmi.action('#haer0248', message);
+                        setStreamCooldown(userid)
+                        return;
+                    }
                 }
             }
         } catch (error) {
             console.log(error.stack);
-            Logger.run('Notify', `Send boardcast failed: ${error}.`);
+            Logger.run('TES.js', `Send boardcast failed: ${error}.`);
         }
     }
+}
+
+function setStreamCooldown(userId, cdTime = 1800 * 1000) {
+    streamCooldown.add(userId);
+    setTimeout(() => { streamCooldown.delete(userId); }, cdTime);
 }
