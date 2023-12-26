@@ -19,7 +19,7 @@ module.exports = {
         Logger.run('Notify', `Receive stream in live from \`${username}\`(\`${userid}\`).`);
 
         try {
-            await conn.query('UPDATE stream_notify SET username = ?, login_id = ? WHERE userid = ?', [username, userlogin, userid]);
+            await conn.query('UPDATE stream_notify SET username = ?, login_id = ?, last_live = now() WHERE userid = ?', [username, userlogin, userid]);
         } catch (error) {
             console.log(error.stack);
             Logger.run('Notify', `Update database failed: ${error}).`);

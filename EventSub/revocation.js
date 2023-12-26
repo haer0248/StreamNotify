@@ -16,6 +16,7 @@ module.exports = {
             console.log(error);
             Logger.run('Notify', `The sql command return error: ${error}`);
         } finally {
+            // conn.release();
             conn.end();
         }        
 
