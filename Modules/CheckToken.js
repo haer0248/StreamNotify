@@ -22,7 +22,6 @@ const fetchToken = async () => {
         process.exit();
         return;
     }
-    Logger.run('Token', 'Checking app token status...');
     try {
         const response = await fetch(`https://id.twitch.tv/oauth2/validate`, {
             method: 'GET',
@@ -34,11 +33,14 @@ const fetchToken = async () => {
         });
 
         if (response.status === 401) return await updateToken()
-        Logger.run('Token', 'App token valid.');
         return twitch.token;
     } catch (error) {
         return await updateToken()
     }
+}
+
+const getToken = async () => {
+    return twitch.token;
 }
 
 const updateToken = async () => {
@@ -54,20 +56,17 @@ const updateToken = async () => {
         fs.writeFileSync(filePath, JSON.stringify(botjson, null, 2));
         
         if (response.status === 200) {
-            err = 0;
             Logger.run('Token', `Update app token successfully.`);
             return fetch_data.access_token;
         } else {
-            err += 1;
             Logger.run('Token', 'Update app token failed.' + JSON.stringify(response));
             return await updateToken();
         }
     } catch (error) {
-        err += 1;
         Logger.run('Token', `Update app token failed: ${error}.`);
     }
 }
 
 module.exports = {
-    fetchToken
+    fetchToken, getToken
 }

@@ -1,18 +1,22 @@
 const
     fetch = require('node-fetch'),
+    Logger = require('./Logger'),
+    CheckToken = require('./CheckToken'),
     { twitch } = require('../config.json');
 
 module.exports = {
-    async getUserid(username) {
+    async getStream(userid) {
+        const token = await CheckToken.fetchToken();
         try {
+            if (!userid) return false;
 
-            const url = `https://api.twitch.tv/helix/users?login=${username}`;
+            const url = `https://api.twitch.tv/helix/streams?user_id=${userid}`;
             const options = {
                 method: 'GET',
                 headers: {
                     'Client-Id': twitch.client_id,
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${twitch.token}`
+                    'Authorization': `Bearer ${token}`
                 }
             };
 
@@ -23,12 +27,11 @@ module.exports = {
                     const response = await fetch(url, options);
 
                     if (response.ok) { // Checking for 2xx response status
-                        const data = await response.json();
-                        console.log(data);
-                        return data.data[0]?.id ?? false; // Using optional chaining
+                        console.log(response);
+                        return await response.json();
                     } else {
                         const debug = await response.json();
-                        console.error(`Fetch user info request failed: ${response.status}, error: ${JSON.stringify(debug)}`);
+                        console.error(`Fetch stream info request failed: ${response.status}, error: ${JSON.stringify(debug)}`);
                         if (attempt === retries) {
                             return { status: false, message: `Request failed after ${retries} attempts.` };
                         }
@@ -41,7 +44,7 @@ module.exports = {
                 }
             }
         } catch (error) {
-            console.log(error);
+            Logger.run('Error', error);
             return false;
         }
     }

@@ -2,9 +2,7 @@ const
     { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, codeBlock } = require('discord.js'),
     { getUserid } = require('../Modules/GetUserid'),
     { getChannel } = require('../Modules/GetChannel'),
-    { getUser } = require('../Modules/GetUser'),
-    CheckToken = require('../Modules/CheckToken'),
-    { discord } = require('../config.json')
+    { getUser } = require('../Modules/GetUser')
     ;
 
 module.exports = {
@@ -20,6 +18,12 @@ module.exports = {
                     option
                         .setName('account')
                         .setDescription('Twitch username')
+                        .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option
+                        .setName('webhook_url')
+                        .setDescription('Send channel live notify webhook url')
                         .setRequired(true)
                 ),
         )
@@ -49,6 +53,17 @@ module.exports = {
                         .setName('send')
                         .setDescription('Send channel notify true or false.')
                         .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option
+                        .setName('webhook_url')
+                        .setDescription('Send channel live notify webhook url')
+                        .setRequired(true)
+                )
+                .addBooleanOption(option =>
+                    option
+                        .setName('send_discord')
+                        .setDescription('Send discord channel notify true or false.')
                 )
                 .addStringOption(option =>
                     option
@@ -89,7 +104,6 @@ module.exports = {
         switch (interaction.options.getSubcommand()) {
             case 'check':
                 try {
-                    await CheckToken.fetchToken();
                     const [result, flied] = await conn.query(`SELECT * FROM stream_notify WHERE login_id = ?`, [username]);
 
                     if (!result?.userid) {
@@ -105,20 +119,20 @@ module.exports = {
                             .setURL(`https://twitch.tv/${channel.broadcaster_login}`)
 
                         if (user?.profile_image_url) {
-                            embed.setAuthor({ 
-                                name: result.username, 
-                                iconURL: user.profile_image_url, 
-                                url: `https://twitch.tv/${result.login_id}` 
+                            embed.setAuthor({
+                                name: result.username,
+                                iconURL: user.profile_image_url,
+                                url: `https://twitch.tv/${result.login_id}`
                             })
                         }
 
-                        var pv_message;
+                        var pv_message = `MrDestructoid 開台偵測器偵測到{username}開台了！傳送門 → {url}`;
                         if (result?.message) {
                             pv_message = result.message;
-                            pv_message = pv_message.replaceAll('{username}', result.username);
-                            pv_message = pv_message.replaceAll('{account}', result.login_id);
-                            pv_message = pv_message.replaceAll('{url}', `https://twitch.tv/${result.login_id}`);
                         }
+                        pv_message = pv_message.replaceAll('{username}', result.username);
+                        pv_message = pv_message.replaceAll('{account}', result.login_id);
+                        pv_message = pv_message.replaceAll('{url}', `https://twitch.tv/${result.login_id}`);
 
                         embed.addFields({
                             name: "Channel Description",
@@ -136,14 +150,18 @@ module.exports = {
                             value: codeBlock(result.send ? `✅ True` : `❌ False`),
                             inline: true
                         }, {
+                            name: "Live Notify (Discord)",
+                            value: codeBlock(result.discord ? `✅ True` : `❌ False`),
+                            inline: true
+                        }, {
                             name: "Sub UUID",
                             value: codeBlock(result.uuid),
                         }, {
                             name: "Live Message",
-                            value: codeBlock((result?.message ?? 'Unset.')),
+                            value: codeBlock((result?.message ?? 'Default.')),
                         }, {
                             name: "Live Message (Preview)",
-                            value: codeBlock(pv_message ?? 'Unset.'),
+                            value: codeBlock(pv_message ?? 'MrDestructoid 開台偵測器偵測到{username}開台了！傳送門 → {url}'),
                         }, {
                             name: "Last live",
                             value: (result.last_live ? `<t:${(Date.parse(result.last_live) / 1000)}>` : 'No data')
@@ -174,6 +192,8 @@ module.exports = {
                     embed.setTitle(`❌ User not found`).setColor(0xff0000).setDescription(`Server response: ${codeBlock(userid)}`);
                 } else {
                     try {
+                        var webhook = interaction.options.getString('webhook_url');
+
                         var version = 1;
                         var condition = {
                             broadcaster_user_id: userid
@@ -187,7 +207,7 @@ module.exports = {
                             var res = sub;
                             subs = await tes.getSubscriptions();
                             try {
-                                await conn.query('INSERT INTO stream_notify (login_id, userid, uuid) VALUES (?, ?, ?, ?)', [username, userid, res.data[0].id]);
+                                await conn.query('INSERT INTO stream_notify (login_id, userid, uuid) VALUES (?, ?, ?)', [username, userid, res.data[0].id]);
                                 const users = await getUser(userid);
                                 const user = users?.data[0];
                                 embed.setTitle(`✅ Created Success`).setColor(0x00ff00).setDescription(codeBlock(`Create stream live notfiy for channel ${user?.display_name}(${user?.login}) success, api limit (${subs.total}/10,000).`));
@@ -205,34 +225,44 @@ module.exports = {
                 break;
             case 'edit':
                 const send = interaction.options.getBoolean('send');
+                const send_discord = interaction.options.getBoolean('send_discord');
                 if (!userid) {
                     embed.setTitle(`❌ User not found`).setColor(0xff0000).setDescription(`Server response: ${codeBlock(userid)}`);
                 } else {
                     try {
                         var message = interaction.options.getString('message');
+                        var webhook = interaction.options.getString('webhook_url');
 
                         var setMessage = '';
-                        
+
                         var version = 1;
                         var condition = {
                             broadcaster_user_id: userid
                         };
-                        
+
+                        if (send_discord) {
+                            setMessage += `, set discord channel: ${send_discord}`;
+                        }
+
                         const [result, flied] = await conn.query("SELECT * FROM stream_notify WHERE login_id = ?", [username]);
                         if (!result?.uuid) {
                             embed.setTitle(`❌ Channel \`${username}\` has not been created yet.`).setColor(0xff0000);
                         } else {
                             try {
-                                await conn.query('UPDATE stream_notify SET send = ? WHERE userid = ?', [send, userid]);
+                                await conn.query('UPDATE stream_notify SET send = ?, discord = ? WHERE userid = ?', [send, send_discord, userid]);
                                 if (message) {
                                     let pv_message = message;
                                     pv_message = pv_message.replaceAll('{username}', (result?.username ?? result?.login_id));
                                     pv_message = pv_message.replaceAll('{account}', result.login_id);
                                     pv_message = pv_message.replaceAll('{url}', `https://twitch.tv/${result.login_id}`);
                                     await conn.query('UPDATE stream_notify SET message = ? WHERE userid = ?', [message, userid]);
-                                    setMessage = `, set message: ${message}, preview: ${pv_message}`;
+                                    setMessage += `, set message: ${message}, preview: ${pv_message}`;
                                 }
-                                embed.setTitle(`✅ Edit Success`).setColor(0x00ff00).setDescription(codeBlock(`Set stream notify for channel ${(result?.username ?? result?.login_id)} (${result?.login_id}) success, now setting is ${send}${setMessage}.`));
+                                if (webhook) {
+                                    await conn.query('UPDATE stream_notify SET webhook = ? WHERE userid = ?', [webhook, userid]);
+                                    setMessage += `, webhook url set: ${webhook}`;
+                                }
+                                embed.setTitle(`✅ Edit Success`).setColor(0x00ff00).setDescription(codeBlock(`Set stream notify for channel ${(result?.username ?? result?.login_id)} (${result?.login_id}) success, now channel setting is ${send}${setMessage}.`));
                             } catch (error) {
                                 embed.setTitle('❌ Server Error').setDescription(codeBlock(error.stack)).setColor(0xff0000);
                             }

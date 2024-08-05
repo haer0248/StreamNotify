@@ -18,7 +18,8 @@ CREATE TABLE `stream_notify` (
   `uuid` varchar(36) DEFAULT NULL,
   `last_live` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `send` int NOT NULL DEFAULT '1',
-  `message` text
+  `webhook` text,
+  `message` text,
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ALTER TABLE `stream_notify`
   ADD PRIMARY KEY (`No`);
@@ -83,8 +84,8 @@ npm install discord.js tesjs tmi.js express mariadb node-fetch@2
 | 指令 | 說明 |
 |-----|------|
 | /notfiy list | 顯示已經登錄的實況通知 (若超出字元數量限制請依情況自行調整) |
-| /notfiy create \<account:string\> | 新增實況通知 |
-| /notfiy edit \<account:string\> \<send:true/false\> [message:string] | 編輯實況通知 |
+| /notfiy create \<account:string\> \<webhook_url:text\> | 新增實況通知 |
+| /notfiy edit \<account:string\> \<send:true/false\> \<webhook_url:text\> [message:string] | 編輯實況通知 |
 | /notfiy remove \<account:string\> | 移除實況通知 |
 | /notify check \<account:string\> | 查看實況通知設定 |
 
